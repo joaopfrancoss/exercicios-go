@@ -37,7 +37,7 @@ func main() {
 
 	for temporada, episodios := range epsPorTemporada {
 		temp := strconv.Itoa(temporada)
-		html += "<h1>" + "TEMPORADA" + temp + "</h1>" + "</br>"
+		html += "<h1>" + "TEMPORADA " + temp + "</h1>" + "</br>"
 		for i := 0; i < len(episodios); i++ {
 			html += episodios[i].Nome + "<img src=" + episodios[i].Imagens.Medio + ">" + "</br>"
 		}
