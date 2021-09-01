@@ -1,127 +1,100 @@
 package main
 
 import (
-	"encoding/json"
+	"encoding/csv"
 	"fmt"
-	"io/ioutil"
+	"io"
+	"log"
 	"os"
 	"strconv"
 )
 
+type Solicitacao struct {
+	NumeroSoliciacao int
+	Tipo             string
+	Orgao            string
+	Data             string
+	Horario          string
+	Assunto          string
+	Subdivisao       string
+	Descricao        string
+	Logradouro       string
+	Bairro           string
+}
+
 func main() {
 
-	var template = `
-	<div class= "ep">
-		</br> 
-		%s 
-		<span class = "espaço"></span> 
-		<button> 
-			<a href= %s   target="_blank" >Link</a>  
-		</button>
-		 %s 
-		 <img src= %s>
-		 </br>
-	 	</br>
-	 </div>
-	 </br>
-	 </br>
-	 `
+	lerCsv()
 
-	var html = `
-	<html>
-	<style>
-	.ep{
-		background-color: #20B2AA;
-		text-align: center;
-	}
+}
 
-	.espaço{
-		width: 15px;
-	}
-	</style>
-	<h1> oi </h1>
-	`
-	f, err := os.Create("index.html")
+func lerCsv() {
+	csvfile, err := os.Open("baseDados.csv")
 	if err != nil {
-		panic(err)
+		log.Fatalln("Couldn't open the csv file", err)
 	}
-	defer f.Close()
 
-	narcos := lerjson()
+	r := csv.NewReader(csvfile)
+	r.FieldsPerRecord = -1
+	r.Comma = ';'
 
-	var epsPorTemporada = make(map[int][]Episodio)
+	var solicitacoes []Solicitacao
+	var j int
 
-	for i := 0; i < len(narcos.Embedded.Episodios); i++ {
-		_, existe := epsPorTemporada[narcos.Embedded.Episodios[i].Temporada]
+	for {
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		j++
+		if j == 1 || j == 2 {
+			continue
+		}
+		if j > 80 {
+			break
+		}
+		num, err := strconv.Atoi(record[0])
+		if err != nil {
+			panic(err)
+		}
+
+		s := Solicitacao{
+			NumeroSoliciacao: num,
+			Tipo:             record[1],
+			Orgao:            record[2],
+			Data:             record[3],
+			Horario:          record[4],
+			Assunto:          record[5],
+			Subdivisao:       record[6],
+			Descricao:        record[7],
+			Logradouro:       record[8],
+			Bairro:           record[9],
+		}
+
+		solicitacoes = append(solicitacoes, s)
+	}
+
+	quantidade := 0
+	for i := 0; i < len(solicitacoes); i++ {
+		if solicitacoes[i].Bairro == "JARDIM BOTANICO" {
+			quantidade++
+		}
+	}
+	fmt.Println(quantidade)
+
+	var ocorrenciaPorBairro = make(map[string]int)
+
+	for i := 0; i < len(solicitacoes); i++ {
+		_, existe := ocorrenciaPorBairro[solicitacoes[i].Bairro]
 		if existe {
-			epsPorTemporada[narcos.Embedded.Episodios[i].Temporada] = append(epsPorTemporada[narcos.Embedded.Episodios[i].Temporada],
-				narcos.Embedded.Episodios[i])
+			ocorrenciaPorBairro[solicitacoes[i].Bairro]++
 		} else {
-			epsPorTemporada[narcos.Embedded.Episodios[i].Temporada] = []Episodio{}
+			ocorrenciaPorBairro[solicitacoes[i].Bairro] = 1
 		}
 	}
 
-	for temporada, episodios := range epsPorTemporada {
-		temp := strconv.Itoa(temporada)
-		html += "<h1>" + "TEMPORADA " + temp + "</h1>" + "</br>"
-		for i := 0; i < len(episodios); i++ {
-			html += fmt.Sprintf(template, episodios[i].Nome, episodios[i].Link, episodios[i].Comentario, episodios[i].Imagens.Medio)
-
-		}
-	}
-
-	// for i := 0; i < len(narcos.Embedded.Episodios); i++ {
-	// 	if narcos.Embedded.Episodios[i].Temporada == 1 {
-	// 		html += narcos.Embedded.Episodios[i].Nome + "<img src=" + narcos.Embedded.Episodios[i].Imagens.Medio + ">" + "</br>"
-	// 	}
-	// }
-
-	html += "</html>"
-	_, err = f.WriteString(html)
-	if err != nil {
-		panic(err)
-	}
-
-}
-
-type Narcos struct {
-	Embedded Embedded `json:"_embedded"`
-}
-
-type Embedded struct {
-	Episodios []Episodio `json:"episodes"`
-}
-
-type Episodio struct {
-	Identificador int              `json:"id"`
-	Link          string           `json:"url"`
-	Nome          string           `json:"name"`
-	Temporada     int              `json:"season"`
-	Imagens       EpisodiosImagens `json:"image"`
-	Comentario    string           `json:"summary"`
-}
-
-type EpisodiosImagens struct {
-	Medio string `json:"medium"`
-}
-
-func lerjson() Narcos {
-	jsonFile, err := os.Open("narcos.json")
-	if err != nil {
-		panic(err)
-	}
-	defer jsonFile.Close()
-
-	byteValue, err := ioutil.ReadAll(jsonFile)
-	if err != nil {
-		panic(err)
-	}
-
-	var narcos Narcos
-	json.Unmarshal(byteValue, &narcos)
-	return narcos
-}
-
-func nomeEp(ep Episodio) {
-
+	fmt.Println(ocorrenciaPorBairro)
 }
