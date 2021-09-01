@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -9,11 +10,36 @@ import (
 
 func main() {
 
+	var template = `
+	<div class= "ep">
+		</br> 
+		%s 
+		<span class = "espaço"></span> 
+		<button> 
+			<a href= %s   target="_blank" >Link</a>  
+		</button>
+		 %s 
+		 <img src= %s>
+		 </br>
+	 	</br>
+	 </div>
+	 </br>
+	 </br>
+	 `
+
 	var html = `
 	<html>
-	<div>
+	<style>
+	.ep{
+		background-color: #20B2AA;
+		text-align: center;
+	}
+
+	.espaço{
+		width: 15px;
+	}
+	</style>
 	<h1> oi </h1>
-	</div>
 	`
 	f, err := os.Create("index.html")
 	if err != nil {
@@ -39,7 +65,8 @@ func main() {
 		temp := strconv.Itoa(temporada)
 		html += "<h1>" + "TEMPORADA " + temp + "</h1>" + "</br>"
 		for i := 0; i < len(episodios); i++ {
-			html += episodios[i].Nome + "<img src=" + episodios[i].Imagens.Medio + ">" + "</br>"
+			html += fmt.Sprintf(template, episodios[i].Nome, episodios[i].Link, episodios[i].Comentario, episodios[i].Imagens.Medio)
+
 		}
 	}
 
@@ -71,6 +98,7 @@ type Episodio struct {
 	Nome          string           `json:"name"`
 	Temporada     int              `json:"season"`
 	Imagens       EpisodiosImagens `json:"image"`
+	Comentario    string           `json:"summary"`
 }
 
 type EpisodiosImagens struct {
