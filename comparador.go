@@ -1,36 +1,31 @@
 package main
 
-func comparador(a, b string) bool {
+func comparator(a, b string) bool {
 	if len(a) != len(b) {
 		return false
 	}
-	letraQuantidade := make(map[string]int)
-	letraQuantidade2 := make(map[string]int)
 
-	for i := 0; i < len(a); i++ {
-		letra := string(a[i])
-		_, existe := letraQuantidade[letra]
-		if existe {
-			letraQuantidade[letra]++
-		} else {
-			letraQuantidade[letra] = 1
-		}
-	}
+	m := makeMap(a)
+	n := makeMap(b)
 
-	for i := 0; i < len(b); i++ {
-		letra := string(b[i])
-		_, existe := letraQuantidade2[letra]
-		if existe {
-			letraQuantidade2[letra]++
-		} else {
-			letraQuantidade2[letra] = 1
-		}
-	}
-
-	for chave := range letraQuantidade {
-		if letraQuantidade[chave] != letraQuantidade2[chave] {
+	for key, _ := range m {
+		if m[key] != n[key] {
 			return false
 		}
 	}
 	return true
+}
+
+func makeMap(word string) map[string]int {
+	x := make(map[string]int)
+	for i := 0; i < len(word); i++ {
+		letra := string(word[i])
+		_, exists := x[letra]
+		if exists {
+			x[word]++
+		} else {
+			x[word] = 1
+		}
+	}
+	return x
 }
